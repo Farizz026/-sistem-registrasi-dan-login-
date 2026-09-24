@@ -2,49 +2,51 @@
 session_start();
 include "koneksi.php";
 
-$email = $_POST['email'];
-$password = $_POST['password'];
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
-$password = md5($password);
-
-$query = mysqli_query($koneksi, "SELECT * FROM users WHERE email='$email'");
+$query = mysqli_query(
+    $koneksi,
+    "SELECT * FROM users WHERE email='$email'"
+);
 
 if (!$query) {
-  die("Query error: " . mysqli_error($koneksi));
+    die("Query error: " . mysqli_error($koneksi));
 }
 
 if (mysqli_num_rows($query) > 0) {
-  $data = mysqli_fetch_assoc($query);
 
-// CEK DATA YANG DIBACA DARI DATABASE
-if (!isset($data['password'])) {
-    echo "<h3>kolom password tidak ditemukan.</h3>";
-    echo "<pre>";
-    print_r($data);
-    echo "</pre>";
-    exit();
-}
+    $data = mysqli_fetch_assoc($query);
 
-if ($password == $data[ 'password']) {
+    // Cek apakah kolom password tersedia
+    if (!isset($data['password'])) {
+        echo "<h3>Kolom password tidak ditemukan.</h3>";
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+        exit();
+    }
 
-    $_SESSION['nama'] = $data['nama'];
-    $_SESSION['email'] = $data['email'];    
-    $_SESSION['jurusan'] = $data['jurusan'];
-    $_SESSION['status'] = "login";
+    // Verifikasi password dengan password_hash()
+    if (password_verify($password, $data['password'])) {
 
-    header("Location: dashboard.php");
-    exit();
+        $_SESSION['nama'] = $data['nama'];
+        $_SESSION['email'] = $data['email'];
+        $_SESSION['jurusan'] = $data['jurusan'];
+        $_SESSION['status'] = "login";
 
-} else {
+        header("Location: dashboard.php");
+        exit();
 
-echo "password salah! <a href='../login.php'>Kembali</a>";
+    } else {
 
-}
+        echo "Password salah! <a href='../login.php'>Kembali</a>";
+
+    }
 
 } else {
 
     echo "Email tidak ditemukan! <a href='../login.php'>Kembali</a>";
 
 }
-
 ?>
